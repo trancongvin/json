@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="{{ csrf }}">
+<title>Kiro Account Checker</title>
+<style>
+  :root{
+    --bg:#0d1117;--bg2:#010409;--card:#161b22;--card2:#1c2128;--border:#30363d;
+    --text:#e6edf3;--muted:#8b949e;--accent:#2f81f7;--green:#3fb950;--red:#f85149;
+    --orange:#d29922;--shadow:0 1px 3px rgba(0,0,0,.4);--radius:10px;
+  }
+  [data-theme="light"]{
+    --bg:#fff;--bg2:#f6f8fa;--card:#fff;--card2:#f6f8fa;--border:#d0d7de;
+    --text:#1f2328;--muted:#656d76;--accent:#0969da;--green:#1a7f37;--red:#cf222e;
+    --orange:#9a6700;--shadow:0 1px 3px rgba(0,0,0,.1);
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);
+       margin:0;padding:1.5rem 1rem 5rem;line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+  header h1{font-size:1.35rem;margin:0;display:flex;align-items:center;gap:.5rem}
+  .logo{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#a371f7);
+        border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+  .head-right{display:flex;gap:.5rem;align-items:center}
+  .iconbtn{background:var(--card);border:1px solid var(--border);color:var(--text);
+           width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:15px;
+           display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+  .iconbtn:hover{border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+        padding:1rem 1.1rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+  .row{margin-bottom:.9rem}.row:last-child{margin-bottom:0}
+  b{font-size:.95rem}
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px}
+  .seg button{background:transparent;border:0;color:var(--muted);padding:.35rem .9rem;border-radius:6px;cursor:pointer;font-size:.9rem}
+  .seg button.active{background:var(--accent);color:#fff}
+  input[type=text],textarea{width:100%;background:var(--bg2);color:var(--text);
+        border:1px solid var(--border);border-radius:8px;padding:.55rem .6rem;font-size:.95rem;
+        font-family:ui-monospace,Consolas,monospace;margin-top:.35rem}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  textarea{height:150px;resize:vertical}
+  textarea.dragover{border-color:var(--accent);background:rgba(47,129,247,.12)}
+  .hint{color:var(--muted);font-size:.82rem}
+  code{background:var(--card2);padding:.1rem .3rem;border-radius:4px;font-size:.85em}
+  .toolbar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  button.btn{padding:.55rem 1.1rem;font-size:.95rem;border-radius:8px;cursor:pointer;border:1px solid transparent}
+  button.primary{background:var(--accent);color:#fff}
+  button.primary:disabled{opacity:.5;cursor:default}
+  button.ghost{background:transparent;color:var(--accent);border-color:var(--accent)}
+  button.ghost:disabled{opacity:.4;cursor:default}
+  .progress{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin:.2rem 0 .6rem;display:none}
+  .progress .bar{height:100%;background:linear-gradient(90deg,var(--accent),#a371f7);width:0;transition:width .4s}
+  .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin:.1rem 0 .8rem}
+  .chip{padding:.25rem .7rem;border-radius:20px;font-size:.82rem;font-weight:600;border:1px solid var(--border)}
+  .chip.r{color:var(--green);border-color:var(--green);background:rgba(63,185,80,.1)}
+  .chip.w{color:var(--red);border-color:var(--red);background:rgba(248,81,73,.1)}
+  .chip.e{color:var(--orange);border-color:var(--orange);background:rgba(210,153,34,.1)}
+  .meta{color:var(--muted);font-size:.85rem}
+  .tabs{display:flex;gap:.4rem;margin-bottom:.5rem;align-items:center;flex-wrap:wrap}
+  .tab{padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.85rem;color:var(--muted);background:var(--bg2);border:1px solid var(--border)}
+  .tab.active{color:var(--text);border-color:var(--accent)}
+  .tab b{color:var(--text)}
+  .scroll{overflow:auto;max-height:55vh;border:1px solid var(--border);border-radius:8px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:.5rem .6rem;text-align:left;border-bottom:1px solid var(--border);font-size:.9rem}
+  th{background:var(--card2);position:sticky;top:0;font-weight:600;color:var(--muted);
+     text-transform:uppercase;font-size:.72rem;letter-spacing:.04em}
+  td.pw{font-family:ui-monospace,Consolas,monospace;color:var(--muted);word-break:break-all;cursor:help}
+  tr.row-in{animation:fadein .35s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .res.Right{color:var(--green);font-weight:700}
+  .res.Wrong{color:var(--red);font-weight:700}
+  .res.Error{color:var(--orange);font-weight:700}
+  td.newpw{color:var(--orange);font-weight:600;font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+  td.del{color:var(--red);font-weight:600;cursor:help;word-break:break-all}
+  td.keys{cursor:help}
+  .err{color:var(--red)}
+  .fullhint{color:var(--orange);font-size:.8rem;margin-top:.3rem;display:none}
+  #toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%) translateY(140%);
+         background:var(--card);border:1px solid var(--border);color:var(--text);padding:.7rem 1.1rem;
+         border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:transform .3s;z-index:50;font-size:.92rem}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  @media(max-width:600px){.toolbar{flex-direction:column;align-items:stretch}.toolbar .meta{order:99}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="logo">👻</span> Kiro Account Checker</h1>
+    <div class="head-right">
+      <button class="iconbtn" id="themeBtn" title="Sáng / tối" onclick="toggleTheme()">🌙</button>
+      <a class="iconbtn" href="/logout" title="Logout">⎋</a>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="row">
+      <b>Loại tài khoản</b>
+      <div class="seg" id="typeSeg" style="margin-top:.4rem">
+        <button type="button" data-type="microsoft" class="active">Microsoft</button>
+        <button type="button" data-type="iam">IAM Identity Center</button>
+      </div>
+    </div>
+    <div class="row" id="fullrow">
+      <label style="display:flex;gap:.5rem;align-items:center;cursor:pointer;font-size:.92rem">
+        <input type="checkbox" id="fullCheck">
+        <span><b>Full check</b> — lấy power credit + API keys (chậm hơn nhiều)</span>
+      </label>
+      <div class="fullhint" id="fullHint">⚠ Full check đăng nhập đầy đủ để lấy power credit + API keys (~40-60s/acc). Riêng Microsoft: account bị ép đổi pass sẽ được đặt <b>pass mới ngẫu nhiên</b> (hiện ở cột New Pass — nhớ lưu lại).</div>
+    </div>
+    <div class="row" id="urlrow" style="display:none">
+      <b>Start URL (IAM)</b>
+      <input type="text" id="url" placeholder="https://d-xxxxxxxxxx.awsapps.com/start">
+    </div>
+    <div class="row">
+      <b>Dán tài khoản</b> <span class="hint">— hoặc kéo-thả file <code>.csv</code>/<code>.txt</code> vào ô. Mỗi dòng <code>user,password</code> hoặc <code>user|password</code>. Tối đa 500.</span>
+      <textarea id="accs" placeholder="frode.tomescu@kiro1.codezdev-cn.cc,5@dWj3#RoLjiHLfY&#10;mybrotherjh387393|s2/f@lC8q7ByC2IU"></textarea>
+      <div class="hint" id="cnt"></div>
+    </div>
+    <div class="row" id="delrow" style="display:none">
+      <b>Keys cần xóa</b> <span class="hint">— mỗi dòng 1 tên key (khớp chính xác). Hoặc bật <code>Xóa tất cả</code>.</span>
+      <textarea id="delkeys" style="height:90px" placeholder="probe-test&#10;my-old-key"></textarea>
+      <label style="display:flex;gap:.5rem;align-items:center;margin-top:.4rem;cursor:pointer">
+        <input type="checkbox" id="delAll"> <span><b>Xóa tất cả key</b> trên mỗi account (bỏ qua ô tên phía trên)</span>
+      </label>
+      <div style="margin-top:.6rem;display:flex;gap:.6rem;align-items:center">
+        <button class="btn primary" style="background:var(--red)" id="btnDelGo" onclick="start('delete')">⚠ Xóa key</button>
+        <span class="hint" style="color:var(--red)">Hành động này hủy hiệu lực key ngay — không hoàn tác.</span>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" id="btn" onclick="start('run')">▶ Run</button>
+      <button class="btn ghost" id="btnKeys" onclick="start('keys')">🔑 Check keys</button>
+      <button class="btn ghost" id="btnDel" onclick="toggleDelRow()">🗑 Delete keys</button>
+      <button class="btn ghost" id="cancel" onclick="cancelJob()" style="display:none">■ Cancel</button>
+      <button class="btn ghost" id="dl" onclick="downloadCsv()" style="display:none">⬇ CSV</button>
+      <button class="btn ghost" id="copy" onclick="copyResults()" style="display:none">⧉ Copy</button>
+      <span class="meta" id="prog"></span>
+    </div>
+  </div>
+
+  <div class="progress" id="progBar"><div class="bar" id="bar"></div></div>
+  <div class="chips" id="chips"></div>
+
+  <div class="card" id="resCard" style="display:none">
+    <div class="tabs">
+      <span class="tab active" data-f="all" onclick="setFilter('all')">Tất cả <b id="cAll">0</b></span>
+      <span class="tab" data-f="Right" onclick="setFilter('Right')">Right <b id="cRight">0</b></span>
+      <span class="tab" data-f="Wrong" onclick="setFilter('Wrong')">Wrong <b id="cWrong">0</b></span>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <p id="err" class="err"></p>
+</div>
+<div id="toast"></div>
+
+<script>
+const CSRF = document.querySelector('meta[name=csrf]').content;
+let timer=null, attempts=0, lastResults=[], lastJobId=null;
+let curFilter='all', maskPw=true, t0=null, lastFull=false, lastMode='checkpass';
+
+/* theme */
+function setTheme(v){ document.documentElement.setAttribute('data-theme', v); localStorage.setItem('theme', v);
+  document.getElementById('themeBtn').textContent = v==='dark'?'🌙':'☀️'; }
+function toggleTheme(){ setTheme(localStorage.getItem('theme')==='dark'?'light':'dark'); }
+setTheme(localStorage.getItem('theme')||'dark');
+
+/* type segment */
+function getType(){ return document.querySelector('#typeSeg button.active').dataset.type; }
+function setType(t){ document.querySelectorAll('#typeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.type===t));
+  document.getElementById('urlrow').style.display = t==='iam'?'':'none';
+  // Full check ho tro ca Microsoft lan IAM -> toggle luon hien.
+  updateFullHint(); }
+function updateFullHint(){ const fc=document.getElementById('fullCheck');
+  const h=document.getElementById('fullHint'); if(h) h.style.display = (fc&&fc.checked)?'block':'none'; }
+document.querySelectorAll('#typeSeg button').forEach(b=>b.onclick=()=>{ setType(b.dataset.type); savePrefs(); updateCount(); });
+document.getElementById('fullCheck').addEventListener('change', updateFullHint);
+
+/* bat/tat o nhap 'Keys can xoa' */
+function toggleDelRow(){ const r=document.getElementById('delrow'); r.style.display = r.style.display==='none' ? '' : 'none'; }
+
+/* thead dong theo mode: full(credit+keys) | keys(chi key) | delete(deleted+remaining) */
+function extraHead(){
+  if(lastMode==='full')  return '<th>New Pass</th><th>Credit</th><th>Reset</th><th>API Keys</th>';
+  if(lastMode==='keys')  return '<th>New Pass</th><th>API Keys</th>';
+  if(lastMode==='delete')return '<th>New Pass</th><th>Deleted</th><th>Remaining</th>';
+  return '';
+}
+function renderHead(){
+  document.getElementById('headRow').innerHTML =
+    '<th>#</th><th>User</th><th>Password <span class="meta" id="maskBtn" style="cursor:pointer" onclick="toggleMask()">'
+    + (maskPw?'🙈':'👁') + '</span></th><th>Result</th>' + extraHead();
+}
+
+/* prefs */
+function savePrefs(){ localStorage.setItem('type', getType()); localStorage.setItem('url', document.getElementById('url').value); }
+(function restore(){ const t=localStorage.getItem('type'); if(t) setType(t);
+  const u=localStorage.getItem('url'); if(u!=null) document.getElementById('url').value=u; })();
+
+/* client-side parse (de'm so luong) */
+function parseCount(text){ let n=0;
+  (text||'').split(/\r?\n/).forEach(ln=>{ ln=ln.trim(); if(!ln) return;
+    const parts = ln.includes('|')?ln.split('|',1):ln.split(',',1);
+    const u=parts[0].trim(); if(u && !['email','user','username'].includes(u.toLowerCase())) n++; });
+  return n; }
+function updateCount(){ const n=parseCount(document.getElementById('accs').value);
+  document.getElementById('cnt').textContent = n? ('Đã nạp: '+n+' acc'):''; }
+document.getElementById('accs').addEventListener('input', updateCount);
+document.getElementById('url').addEventListener('input', savePrefs);
+
+/* drag-drop file */
+const ta=document.getElementById('accs');
+['dragover','dragenter'].forEach(ev=>ta.addEventListener(ev,e=>{e.preventDefault();ta.classList.add('dragover')}));
+['dragleave','drop'].forEach(ev=>ta.addEventListener(ev,e=>{e.preventDefault();ta.classList.remove('dragover')}));
+ta.addEventListener('drop', async e=>{ const f=e.dataTransfer.files[0]; if(!f) return;
+  const txt=await f.text(); ta.value = ta.value.trim() ? (ta.value.trim()+'\n'+txt) : txt; updateCount(); });
+
+/* Ctrl+Enter = Run */
+document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); start(); } });
+
+/* helpers */
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),4000); }
+function beep(){ try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+  const c=new C(), o=c.createOscillator(), g=c.createGain(); o.connect(g); g.connect(c.destination);
+  o.frequency.value=880; o.type='sine'; g.gain.setValueAtTime(.06,c.currentTime); o.start(); o.stop(c.currentTime+.15);}catch(e){} }
+
+/* run */
+async function start(action){
+  if(timer){ clearTimeout(timer); timer=null; }
+  document.getElementById('err').textContent='';
+  const type=getType(), url=document.getElementById('url').value.trim(), accounts=document.getElementById('accs').value;
+  // action: 'keys' -> keys-only; 'delete' -> xoa key; 'run' -> full/checkpass theo checkbox.
+  let mode;
+  const payload = {type,url,accounts};
+  if(action==='keys'){ mode='keys'; }
+  else if(action==='delete'){
+    mode='delete';
+    payload.keys = document.getElementById('delkeys').value;
+    payload.delete_all = document.getElementById('delAll').checked;
+  } else {
+    mode = document.getElementById('fullCheck').checked ? 'full' : 'checkpass';
+  }
+  payload.mode = mode;
+  if(!accounts.trim()){ document.getElementById('err').textContent='Dán ít nhất 1 tài khoản.'; return; }
+  if(mode==='delete' && !payload.delete_all && !payload.keys.trim()){
+    document.getElementById('err').textContent='Nhập tên key cần xóa hoặc bật “Xóa tất cả key”.'; return; }
+  const btn=document.getElementById('btn'); btn.disabled=true; btn.textContent='Đang gửi...';
+  document.getElementById('btnKeys').disabled=true; document.getElementById('btnDel').disabled=true;
+  let r; try{ r=await fetch('/run',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF':CSRF},
+        body:JSON.stringify(payload)});
+  }catch(e){ btn.disabled=false; btn.textContent='▶ Run'; document.getElementById('btnKeys').disabled=false; document.getElementById('btnDel').disabled=false; document.getElementById('err').textContent='Lỗi mạng: '+e; return; }
+  const j=await r.json(); btn.disabled=false; btn.textContent='▶ Run'; document.getElementById('btnKeys').disabled=false; document.getElementById('btnDel').disabled=false;
+  if(!r.ok||j.error){ document.getElementById('err').textContent=j.error||('HTTP '+r.status); return; }
+  lastJobId=j.job_id; lastResults=[]; curFilter='all'; maskPw=true; t0=Date.now();
+  lastFull=!!j.full; lastMode=j.mode||'checkpass';
+  renderHead();
+  document.getElementById('resCard').style.display='';
+  document.getElementById('progBar').style.display='';
+  document.getElementById('cancel').style.display='';
+  document.getElementById('maskBtn').textContent='🙈';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.f==='all'));
+  setChips(0,0,0); renderCounts(0,0,0,0); document.getElementById('bar').style.width='0%';
+  renderResults();
+  attempts=0; poll(j.job_id);
+}
+
+function cancelJob(){ if(!lastJobId) return;
+  fetch('/cancel/'+lastJobId,{method:'POST',headers:{'X-CSRF':CSRF}})
+    .then(()=>toast('Đã yêu cầu dừng (xong acc hiện tại).')); }
+
+function poll(jobId){
+  fetch('/status/'+jobId).then(r=> r.ok? r.json() : Promise.reject(new Error('HTTP '+r.status)))
+   .then(j=>{
+     attempts=0; lastResults=j.results;
+     const R=j.results.filter(x=>x.result==='Right').length, W=j.results.filter(x=>x.result==='Wrong').length, E=j.results.filter(x=>x.result==='Error').length;
+     setChips(R,W,E); renderCounts(j.results.length,R,W);
+     document.getElementById('bar').style.width=(j.total?Math.round(j.done/j.total*100):0)+'%';
+     const el=(Date.now()-t0)/1000;
+     const eta=(j.done>0 && j.done<j.total)?Math.round((j.total-j.done)/(j.done/el)):-1;
+     const spd=el>0?(j.done/el*60):0;
+     document.getElementById('prog').textContent = j.status==='done'?'✓ Xong'
+       : (j.status==='queued'?'Đang chờ...':'Đang check...')
+         + (eta>0?` · ETA ~${eta}s`:'') + (spd>0?` · ${spd.toFixed(0)} acc/phút`:'');
+     document.getElementById('dl').style.display=j.results.length?'':'none';
+     document.getElementById('copy').style.display=j.results.length?'':'none';
+     renderResults();
+     if(j.status==='done'){
+       document.getElementById('cancel').style.display='none';
+       toast(`✓ Xong — Right ${R} · Wrong ${W}`); beep(); return;
+     }
+     timer=setTimeout(()=>poll(jobId),1500);
+   })
+   .catch(()=>{ if(++attempts>20){ document.getElementById('err').textContent='Mất kết nối server.'; return; }
+     timer=setTimeout(()=>poll(jobId),3000); });
+}
+
+function setChips(r,w,e){
+  document.getElementById('chips').innerHTML =
+    `<span class="chip r">Right ${r}</span><span class="chip w">Wrong ${w}</span><span class="chip e">Error ${e}</span>`;
+}
+function renderCounts(all,r,w){
+  document.getElementById('cAll').textContent=all;
+  document.getElementById('cRight').textContent=r;
+  document.getElementById('cWrong').textContent=w;
+}
+function filtered(){ return lastResults.filter(x=> curFilter==='all'?true:x.result===curFilter); }
+function renderResults(){
+  const rows=filtered();
+  document.getElementById('tbody').innerHTML = rows.map((r,i)=>{
+    const pw = maskPw ? '••••••' : esc(r.password);
+    const det = r.detail ? (' title="'+esc(r.detail)+'"') : '';
+    let extra='';
+    const keysArr = r.api_keys||[];
+    const keysTxt = keysArr.length ? `${keysArr.length} key` : '0';
+    const keysTitle = keysArr.length ? keysArr.map(k=>`${k.name}${k.created?(' — '+k.created):''}`).join('\n') : 'Account chưa tạo API key nào';
+    if(lastMode==='full'){
+      const credit = (r.credit_used!=null && r.credit_total!=null) ? `${r.credit_used}/${r.credit_total}` : '';
+      extra = `<td class="newpw">${esc(r.new_password||'')}</td>`+
+              `<td>${esc(credit)}</td><td>${esc(r.credit_reset||'')}</td>`+
+              `<td class="keys" title="${esc(keysTitle)}">${esc(keysTxt)}</td>`;
+    } else if(lastMode==='keys'){
+      extra = `<td class="newpw">${esc(r.new_password||'')}</td>`+
+              `<td class="keys" title="${esc(keysTitle)}">${esc(keysTxt)}</td>`;
+    } else if(lastMode==='delete'){
+      const del = r.deleted_keys||[];
+      const delTxt = del.length ? del.join(', ') : '—';
+      const remTxt = keysArr.length ? `${keysArr.length} key` : '0';
+      extra = `<td class="newpw">${esc(r.new_password||'')}</td>`+
+              `<td class="del" title="${esc(del.join('\n'))}">${esc(delTxt)}</td>`+
+              `<td class="keys" title="${esc(keysTitle)}">${esc(remTxt)}</td>`;
+    }
+    return `<tr class="row-in"><td>${i+1}</td><td>${esc(r.user)}</td><td class="pw" ${det}>${pw}</td><td class="res ${esc(r.result)}">${esc(r.result)}</td>${extra}</tr>`;
+  }).join('');
+}
+function setFilter(f){ curFilter=f; document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.f===f)); renderResults(); }
+function toggleMask(){ maskPw=!maskPw; document.getElementById('maskBtn').textContent=maskPw?'🙈':'👁'; renderResults(); }
+
+function keysJoin(r){ return (r.api_keys||[]).map(k=>`${k.name}${k.created?(':'+k.created):''}`).join(';'); }
+function delJoin(r){ return (r.deleted_keys||[]).join(';'); }
+function copyRow(r){
+  if(lastMode==='full')      return `${r.user}\t${r.password}\t${r.result}\t${r.new_password||''}\t${r.credit_used??''}/${r.credit_total??''}\t${r.credit_reset||''}\t${keysJoin(r)}`;
+  if(lastMode==='keys')      return `${r.user}\t${r.password}\t${r.result}\t${r.new_password||''}\t${keysJoin(r)}`;
+  if(lastMode==='delete')    return `${r.user}\t${r.password}\t${r.result}\t${r.new_password||''}\t${delJoin(r)}\t${keysJoin(r)}`;
+  return `${r.user}\t${r.password}\t${r.result}`;
+}
+function copyResults(){
+  const rows=filtered(); if(!rows.length) return;
+  const txt=rows.map(copyRow).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>toast('Đã copy '+rows.length+' dòng.'),()=>toast('Copy thất bại.'));
+}
+function csvCell(v){ v=v==null?'':String(v); return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function csvRow(r){
+  if(lastMode==='full')   return [r.user,r.password,r.result,r.new_password||'',r.credit_used??'',r.credit_total??'',r.credit_remaining??'',r.credit_reset||'',keysJoin(r)];
+  if(lastMode==='keys')   return [r.user,r.password,r.result,r.new_password||'',keysJoin(r)];
+  if(lastMode==='delete') return [r.user,r.password,r.result,r.new_password||'',delJoin(r),keysJoin(r)];
+  return [r.user,r.password,r.result];
+}
+function csvHeader(){
+  if(lastMode==='full')   return ['user','password','result','new_password','credit_used','credit_total','credit_remaining','credit_reset','api_keys'];
+  if(lastMode==='keys')   return ['user','password','result','new_password','api_keys'];
+  if(lastMode==='delete') return ['user','password','result','new_password','deleted_keys','api_keys_remaining'];
+  return ['user','password','result'];
+}
+function downloadCsv(){
+  const rows=filtered(); if(!rows.length) return;
+  const lines=[csvHeader()].concat(rows.map(csvRow));
+  const csv=lines.map(l=>l.map(csvCell).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='kiro-check-results.csv';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+}
+
+updateCount();
+</script>
+</body>
+</html>

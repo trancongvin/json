@@ -1,0 +1,16 @@
+# Cau hinh Render (Blueprint). Push len GitHub repo, tren Render chon
+# "New +" -> "Blueprint" -> chi den repo nay, Render tu doc render.yaml.
+services:
+  - type: web
+    name: kiro-checker
+    runtime: docker
+    plan: free            # doi plan thanh "starter" neu can RAM/reliability hon
+    autoDeploy: true
+    healthcheckPath: /healthz
+    envVars:
+      - key: CHECKPASS_PASSWORD        # mat khau truy cap web -> NHAP KHI DEPLOY
+        sync: false
+      - key: SECRET_KEY                # Flask session key -> Render tu sinh
+        generateValue: true
+      - key: OUT_DIR                   # cho screenshot loi (optional)
+        value: /tmp/out

@@ -1,0 +1,8 @@
+email,password,url
+# Microsoft account (co "@"):
+#   frode.tomescu@kiro1.codezdev-cn.cc,5@dWj3#RoLjiHLfY,
+# IAM Identity Center (KHONG co "@", can start URL o cot url):
+#   myuser,MyP@ssword,https://d-xxxxxxxxxx.awsapps.com/start
+#
+# Delimiter tu dong phat hien: "," hoac "|". Header (email,password,...) tu dong bo qua.
+# Copy file nay thanh accounts.csv (bi .gitignore loai bo) roi chay batch.py.

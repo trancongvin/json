@@ -1,0 +1,15 @@
+out/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.claude/
+plans/
+*.log
+_run.log
+.env
+.env.*
+*.json
+Dockerfile
+render.yaml
+.dockerignore

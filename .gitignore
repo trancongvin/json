@@ -1,0 +1,25 @@
+# === SECRETS / CREDENTIALS — KHONG BAO GIO commit ===
+# File account (email + password), file token Kiro (refresh/access token),
+# va bat ky file .json nao o root (de phong leak token).
+accounts.csv
+/*.json
+CLIProxyAPI_*.json
+
+# === Artifacts ===
+# out/ chua screenshot, HTML dump, log, va file CLIProxyAPI_* da xuat (co token).
+out/
+__pycache__/
+*.pyc
+
+# === Local / env ===
+.env
+.env.*
+*.local
+*_local.*
+.vscode/
+.idea/
+.claude/
+
+# === OS ===
+.DS_Store
+Thumbs.db
