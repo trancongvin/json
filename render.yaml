@@ -6,7 +6,7 @@ services:
     runtime: docker
     plan: free            # doi plan thanh "starter" neu can RAM/reliability hon
     autoDeploy: true
-    healthcheckPath: /healthz
+    healthCheckPath: /healthz
     envVars:
       - key: CHECKPASS_PASSWORD        # mat khau truy cap web -> NHAP KHI DEPLOY
         sync: false
