@@ -103,12 +103,15 @@
         <button type="button" data-type="iam">IAM Identity Center</button>
       </div>
     </div>
-    <div class="row" id="fullrow">
-      <label style="display:flex;gap:.5rem;align-items:center;cursor:pointer;font-size:.92rem">
-        <input type="checkbox" id="fullCheck">
-        <span><b>Full check</b> — lấy power credit + API keys (chậm hơn nhiều)</span>
-      </label>
-      <div class="fullhint" id="fullHint">⚠ Full check đăng nhập đầy đủ để lấy power credit + API keys (~40-60s/acc). Riêng Microsoft: account bị ép đổi pass sẽ được đặt <b>pass mới ngẫu nhiên</b> (hiện ở cột New Pass — nhớ lưu lại).</div>
+    <div class="row" id="moderow">
+      <b>Chế độ</b>
+      <div class="seg" id="modeSeg" style="margin-top:.4rem;flex-wrap:wrap">
+        <button type="button" data-mode="checkpass" class="active">Check pass</button>
+        <button type="button" data-mode="full">Full (pass+credit+key)</button>
+        <button type="button" data-mode="keys">🔑 Keys</button>
+        <button type="button" data-mode="delete">🗑 Delete</button>
+      </div>
+      <div class="hint" id="modeHint" style="margin-top:.4rem"></div>
     </div>
     <div class="row" id="urlrow" style="display:none">
       <b>Start URL (IAM)</b>
@@ -125,15 +128,10 @@
       <label style="display:flex;gap:.5rem;align-items:center;margin-top:.4rem;cursor:pointer">
         <input type="checkbox" id="delAll"> <span><b>Xóa tất cả key</b> trên mỗi account (bỏ qua ô tên phía trên)</span>
       </label>
-      <div style="margin-top:.6rem;display:flex;gap:.6rem;align-items:center">
-        <button class="btn primary" style="background:var(--red)" id="btnDelGo" onclick="start('delete')">⚠ Xóa key</button>
-        <span class="hint" style="color:var(--red)">Hành động này hủy hiệu lực key ngay — không hoàn tác.</span>
-      </div>
+      <div class="hint" style="margin-top:.5rem;color:var(--red)">⚠ Hành động này hủy hiệu lực key ngay — không hoàn tác. Nhập tên xong bấm <b>Run</b>.</div>
     </div>
     <div class="toolbar">
-      <button class="btn primary" id="btn" onclick="start('run')">▶ Run</button>
-      <button class="btn ghost" id="btnKeys" onclick="start('keys')">🔑 Check keys</button>
-      <button class="btn ghost" id="btnDel" onclick="toggleDelRow()">🗑 Delete keys</button>
+      <button class="btn primary" id="btn" onclick="start()">▶ Run</button>
       <button class="btn ghost" id="cancel" onclick="cancelJob()" style="display:none">■ Cancel</button>
       <button class="btn ghost" id="dl" onclick="downloadCsv()" style="display:none">⬇ CSV</button>
       <button class="btn ghost" id="copy" onclick="copyResults()" style="display:none">⧉ Copy</button>
@@ -175,16 +173,23 @@ setTheme(localStorage.getItem('theme')||'dark');
 /* type segment */
 function getType(){ return document.querySelector('#typeSeg button.active').dataset.type; }
 function setType(t){ document.querySelectorAll('#typeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.type===t));
-  document.getElementById('urlrow').style.display = t==='iam'?'':'none';
-  // Full check ho tro ca Microsoft lan IAM -> toggle luon hien.
-  updateFullHint(); }
-function updateFullHint(){ const fc=document.getElementById('fullCheck');
-  const h=document.getElementById('fullHint'); if(h) h.style.display = (fc&&fc.checked)?'block':'none'; }
+  document.getElementById('urlrow').style.display = t==='iam'?'':'none'; }
 document.querySelectorAll('#typeSeg button').forEach(b=>b.onclick=()=>{ setType(b.dataset.type); savePrefs(); updateCount(); });
-document.getElementById('fullCheck').addEventListener('change', updateFullHint);
 
-/* bat/tat o nhap 'Keys can xoa' */
-function toggleDelRow(){ const r=document.getElementById('delrow'); r.style.display = r.style.display==='none' ? '' : 'none'; }
+/* mode segment */
+const MODE_HINT = {
+  checkpass: 'Chỉ xác nhận pass ĐÚNG/SAI (nhanh). KHÔNG đổi pass.',
+  full: 'Pass + power credit + API keys (~40-60s/acc). Acc bị ép đổi pass sẽ được đặt pass mới ngẫu nhiên → nhớ lưu cột New Pass.',
+  keys: 'Cào danh sách API key + ngày tạo (chỉ đọc, không đổi gì).',
+  delete: 'Xóa key chọn lọc theo tên (hoặc xóa hết). Hủy hiệu lực key NGAY — không hoàn tác.'
+};
+function getMode(){ return document.querySelector('#modeSeg button.active').dataset.mode; }
+function setMode(m){ document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
+  document.getElementById('modeHint').textContent = MODE_HINT[m]||'';
+  // chi hien o nhap 'keys can xoa' khi mode delete
+  document.getElementById('delrow').style.display = (m==='delete')?'':'none';
+  savePrefs(); }
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
 
 /* thead dong theo mode: full(credit+keys) | keys(chi key) | delete(deleted+remaining) */
 function extraHead(){
@@ -200,9 +205,10 @@ function renderHead(){
 }
 
 /* prefs */
-function savePrefs(){ localStorage.setItem('type', getType()); localStorage.setItem('url', document.getElementById('url').value); }
+function savePrefs(){ localStorage.setItem('type', getType()); localStorage.setItem('url', document.getElementById('url').value); localStorage.setItem('mode', getMode()); }
 (function restore(){ const t=localStorage.getItem('type'); if(t) setType(t);
-  const u=localStorage.getItem('url'); if(u!=null) document.getElementById('url').value=u; })();
+  const u=localStorage.getItem('url'); if(u!=null) document.getElementById('url').value=u;
+  setMode(localStorage.getItem('mode')||'checkpass'); })();
 
 /* client-side parse (de'm so luong) */
 function parseCount(text){ let n=0;
@@ -233,31 +239,24 @@ function beep(){ try{ const C=window.AudioContext||window.webkitAudioContext; if
   o.frequency.value=880; o.type='sine'; g.gain.setValueAtTime(.06,c.currentTime); o.start(); o.stop(c.currentTime+.15);}catch(e){} }
 
 /* run */
-async function start(action){
+async function start(){
   if(timer){ clearTimeout(timer); timer=null; }
   document.getElementById('err').textContent='';
   const type=getType(), url=document.getElementById('url').value.trim(), accounts=document.getElementById('accs').value;
-  // action: 'keys' -> keys-only; 'delete' -> xoa key; 'run' -> full/checkpass theo checkbox.
-  let mode;
-  const payload = {type,url,accounts};
-  if(action==='keys'){ mode='keys'; }
-  else if(action==='delete'){
-    mode='delete';
+  const mode = getMode();
+  const payload = {type,url,accounts,mode};
+  if(mode==='delete'){
     payload.keys = document.getElementById('delkeys').value;
     payload.delete_all = document.getElementById('delAll').checked;
-  } else {
-    mode = document.getElementById('fullCheck').checked ? 'full' : 'checkpass';
   }
-  payload.mode = mode;
   if(!accounts.trim()){ document.getElementById('err').textContent='Dán ít nhất 1 tài khoản.'; return; }
   if(mode==='delete' && !payload.delete_all && !payload.keys.trim()){
     document.getElementById('err').textContent='Nhập tên key cần xóa hoặc bật “Xóa tất cả key”.'; return; }
   const btn=document.getElementById('btn'); btn.disabled=true; btn.textContent='Đang gửi...';
-  document.getElementById('btnKeys').disabled=true; document.getElementById('btnDel').disabled=true;
   let r; try{ r=await fetch('/run',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF':CSRF},
         body:JSON.stringify(payload)});
-  }catch(e){ btn.disabled=false; btn.textContent='▶ Run'; document.getElementById('btnKeys').disabled=false; document.getElementById('btnDel').disabled=false; document.getElementById('err').textContent='Lỗi mạng: '+e; return; }
-  const j=await r.json(); btn.disabled=false; btn.textContent='▶ Run'; document.getElementById('btnKeys').disabled=false; document.getElementById('btnDel').disabled=false;
+  }catch(e){ btn.disabled=false; btn.textContent='▶ Run'; document.getElementById('err').textContent='Lỗi mạng: '+e; return; }
+  const j=await r.json(); btn.disabled=false; btn.textContent='▶ Run';
   if(!r.ok||j.error){ document.getElementById('err').textContent=j.error||('HTTP '+r.status); return; }
   lastJobId=j.job_id; lastResults=[]; curFilter='all'; maskPw=true; t0=Date.now();
   lastFull=!!j.full; lastMode=j.mode||'checkpass';
