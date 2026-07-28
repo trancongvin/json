@@ -1493,7 +1493,8 @@ def load_accounts(path):
     # Doc danh sach account tu CSV. Tu dong phat hien delimiter ('|' hoac ',') va
     # bo dong header -> ho tro ca "email,password[,url]" va "user|password[|url]".
     # Gia su password KHONG chua delimiter (neu chua thi phai quote trong CSV).
-    with open(path, encoding="utf-8") as fh:
+    # utf-8-sig tu bo BOM (Excel/Notepad hay them BOM -> header bi thanh account).
+    with open(path, encoding="utf-8-sig") as fh:
         lines = [ln.rstrip("\r\n") for ln in fh]
     data = [ln for ln in lines if ln.strip()]
     sample = "".join(data[1:5]) if len(data) > 1 else ""

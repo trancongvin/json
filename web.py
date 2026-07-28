@@ -84,11 +84,14 @@ _q = queue.Queue()
 
 def parse_accounts(text):
     rows = []
-    for ln in (text or "").splitlines():
+    text = (text or "").lstrip("﻿")   # bo BOM (Excel/Notepad hay them)
+    for ln in text.splitlines():
         ln = ln.strip()
         if not ln:
             continue
-        parts = ln.split("|", 1) if "|" in ln else ln.split(",", 1)
+        delim = "|" if "|" in ln else ","
+        # user, password, [url...] — bo cot url (web dung 1 start URL chung theo job).
+        parts = ln.split(delim, 2)
         user = parts[0].strip()
         if not user or user.lower() in ("email", "user", "username"):
             continue
