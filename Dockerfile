@@ -3,15 +3,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
-# Cai Python deps + Chromium (kem system deps).
+# Cai Python deps + Chromium (kem system deps) vao /ms-playwright (path chung).
+# Luu y: buoc nay chay dang root. Neu khong set PLAYWRIGHT_BROWSERS_PATH, browser
+# vao /root/.cache -> user 'app' (runtime) khong thay -> loi "Executable doesn't exist".
 COPY requirements.txt .
 RUN pip install -r requirements.txt \
  && playwright install --with-deps chromium
 
-# Tao user non-root (giam privilege).
-RUN useradd -m app
+# Tao user non-root va cap quien doc browser cho app (cai luc nay la root).
+RUN useradd -m app \
+ && chmod -R a+rX /ms-playwright
 COPY --chown=app:app . .
 USER app
 
